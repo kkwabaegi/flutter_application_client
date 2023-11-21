@@ -1,5 +1,6 @@
-import 'package:custom_radio_grouped_button/custom_radio_grouped_button.dart';
 import 'package:flutter/material.dart';
+import 'package:custom_radio_grouped_button/custom_radio_grouped_button.dart';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_application_client/my_cafe.dart';
@@ -52,6 +53,7 @@ class _MainState extends State<Main> {
   //카테고리 보기 기능
   Future<void> showCategoryList() async {
     var result = db.collection(categoryCollectionName).get();
+
     categoryList = FutureBuilder(
       future: result,
       builder: (context, snapshot) {
@@ -71,7 +73,41 @@ class _MainState extends State<Main> {
                   unSelectedColor: Colors.black,
                   textStyle: TextStyle(fontSize: 16)),
               radioButtonValue: (value) {
-                print(value);
+                setState(() {
+                  //value(카테고리 id를 갖고 있는 아이템들을 출력)
+                  itemList = FutureBuilder(
+                      future: db
+                          .collection(itemCollectionName)
+                          .where('categoryId', isEqualTo: value)
+                          .get(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          var items = snapshot.data!.docs;
+                          if (items.isEmpty) {
+                            //아이템이 없는 경우
+                            return const Center(child: Text('empty!'));
+                          } else {
+                            List<Widget> lt = [];
+                            for (var item in items) {
+                              lt.add(Container(
+                                child: Column(children: [
+                                  Text(item['itemName']),
+                                  Text(item['itemPrice'].toString())
+                                ]),
+                              ));
+                            }
+                            return Wrap(
+                              children: lt,
+                            );
+                          }
+                        } else {
+                          //아직 데이터 로드 중
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+                      });
+                });
               },
               selectedColor: Theme.of(context).colorScheme.secondary,
             );
@@ -100,21 +136,19 @@ class _MainState extends State<Main> {
         appBar: AppBar(
           title: const Text("Kkwabaegi Caffee"),
           actions: [
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.only(right: 10),
-                child: Badge(
-                  label: const Text('1'),
-                  child: IconButton(
-                      onPressed: () {
-                        if (panelController.isPanelClosed) {
-                          panelController.open();
-                        } else {
-                          panelController.close();
-                        }
-                      },
-                      icon: const Icon(Icons.shopping_cart)),
-                ),
+            Transform.translate(
+              offset: const Offset(-10, 5),
+              child: Badge(
+                label: const Text('1'),
+                child: IconButton(
+                    onPressed: () {
+                      if (panelController.isPanelClosed) {
+                        panelController.open();
+                      } else {
+                        panelController.close();
+                      }
+                    },
+                    icon: const Icon(Icons.shopping_cart)),
               ),
             )
           ],
@@ -143,7 +177,7 @@ class _MainState extends State<Main> {
                 //카테고리 목록
                 categoryList,
                 //아이템 목록
-                itemList,
+                Expanded(child: itemList),
               ],
             )));
   }
