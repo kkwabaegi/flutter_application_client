@@ -67,59 +67,21 @@ class _MainState extends State<Main> {
             return const Text('nothing');
           } else {
             return CustomRadioButton(
+              defaultSelected: 'toAll',
               elevation: 0,
               absoluteZeroSpacing: true,
               unSelectedColor: Theme.of(context).canvasColor,
-              buttonLables: [for (var data in datas) data['categoryName']],
-              buttonValues: [for (var data in datas) data.id],
+              buttonLables: [
+                '전체보기',
+                for (var data in datas) data['categoryName']
+              ],
+              buttonValues: ['toAll', for (var data in datas) data.id],
               buttonTextStyle: const ButtonTextStyle(
                   selectedColor: Colors.white,
                   unSelectedColor: Colors.black,
                   textStyle: TextStyle(fontSize: 16)),
               radioButtonValue: (value) {
-                setState(() {
-                  //value(카테고리 id를 갖고 있는 아이템들을 출력)
-                  itemList = FutureBuilder(
-                      future: db
-                          .collection(itemCollectionName)
-                          .where('categoryId', isEqualTo: value)
-                          .get(),
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          var items = snapshot.data!.docs;
-                          if (items.isEmpty) {
-                            //아이템이 없는 경우
-                            return const Center(child: Text('empty!'));
-                          } else {
-                            List<Widget> lt = [];
-                            for (var item in items) {
-                              lt.add(Container(
-                                margin: const EdgeInsets.all(5),
-                                width: 100,
-                                height: 100,
-                                decoration: BoxDecoration(
-                                    border: Border.all(
-                                        width: 2, color: Colors.brown),
-                                    color: Colors.amber[100],
-                                    borderRadius: BorderRadius.circular(10)),
-                                child: Column(children: [
-                                  Text(item['itemName']),
-                                  Text(toCurrency(item['itemPrice']))
-                                ]),
-                              ));
-                            }
-                            return Wrap(
-                              children: lt,
-                            );
-                          }
-                        } else {
-                          //아직 데이터 로드 중
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        }
-                      });
-                });
+                showItems(value);
               },
               selectedColor: Theme.of(context).colorScheme.secondary,
             );
@@ -132,7 +94,52 @@ class _MainState extends State<Main> {
   }
 
   //아이템 보기 기능
-
+  Future<void> showItems(String value) async {
+    setState(() {
+      //value(카테고리 id를 갖고 있는 아이템들을 출력)
+      itemList = FutureBuilder(
+          future: value != 'toAll'
+              ? db
+                  .collection(itemCollectionName)
+                  .where('categoryId', isEqualTo: value)
+                  .get()
+              : db.collection(itemCollectionName).get(),
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              var items = snapshot.data!.docs;
+              if (items.isEmpty) {
+                //아이템이 없는 경우
+                return const Center(child: Text('empty!'));
+              } else {
+                List<Widget> lt = [];
+                for (var item in items) {
+                  lt.add(Container(
+                    margin: const EdgeInsets.all(5),
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                        border: Border.all(width: 2, color: Colors.brown),
+                        color: Colors.amber[100],
+                        borderRadius: BorderRadius.circular(10)),
+                    child: Column(children: [
+                      Text(item['itemName']),
+                      Text(toCurrency(item['itemPrice']))
+                    ]),
+                  ));
+                }
+                return Wrap(
+                  children: lt,
+                );
+              }
+            } else {
+              //아직 데이터 로드 중
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+          });
+    });
+  }
   //장바구니 보기 기능
 
   @override
@@ -140,6 +147,7 @@ class _MainState extends State<Main> {
     // TODO: implement initState
     super.initState();
     showCategoryList();
+    showItems('toAll');
   }
 
   @override
@@ -186,6 +194,7 @@ class _MainState extends State<Main> {
               child: Text("This is the sliding Widget"),
             ),
             body: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 //카테고리 목록
                 categoryList,
