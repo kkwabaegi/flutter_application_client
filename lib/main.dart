@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:custom_radio_grouped_button/custom_radio_grouped_button.dart';
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_application_client/my_cafe.dart';
 import 'firebase_options.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
+import 'package:intl/intl.dart';
 
 var db = FirebaseFirestore.instance;
 String categoryCollectionName = 'cafe-category';
@@ -50,6 +50,10 @@ class _MainState extends State<Main> {
   //장바구니 컨트롤러
   PanelController panelController = PanelController();
 
+  String toCurrency(int n) {
+    return NumberFormat.currency(locale: 'ko_KR', symbol: '₩').format(n);
+  }
+
   //카테고리 보기 기능
   Future<void> showCategoryList() async {
     var result = db.collection(categoryCollectionName).get();
@@ -90,9 +94,17 @@ class _MainState extends State<Main> {
                             List<Widget> lt = [];
                             for (var item in items) {
                               lt.add(Container(
+                                margin: const EdgeInsets.all(5),
+                                width: 100,
+                                height: 100,
+                                decoration: BoxDecoration(
+                                    border: Border.all(
+                                        width: 2, color: Colors.brown),
+                                    color: Colors.amber[100],
+                                    borderRadius: BorderRadius.circular(10)),
                                 child: Column(children: [
                                   Text(item['itemName']),
-                                  Text(item['itemPrice'].toString())
+                                  Text(toCurrency(item['itemPrice']))
                                 ]),
                               ));
                             }
@@ -134,6 +146,7 @@ class _MainState extends State<Main> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
+          backgroundColor: ThemeData.light(useMaterial3: false).primaryColor,
           title: const Text("Kkwabaegi Caffee"),
           actions: [
             Transform.translate(
