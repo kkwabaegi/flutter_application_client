@@ -1,3 +1,4 @@
+import 'package:cart_stepper/cart_stepper.dart';
 import 'package:flutter/material.dart';
 import 'package:custom_radio_grouped_button/custom_radio_grouped_button.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -28,9 +29,10 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: Main(),
+      theme: ThemeData.light(useMaterial3: false),
+      home: const Main(),
     );
   }
 }
@@ -67,6 +69,7 @@ class _MainState extends State<Main> {
             return const Text('nothing');
           } else {
             return CustomRadioButton(
+              enableButtonWrap: true,
               defaultSelected: 'toAll',
               elevation: 0,
               absoluteZeroSpacing: true,
@@ -113,19 +116,95 @@ class _MainState extends State<Main> {
               } else {
                 List<Widget> lt = [];
                 for (var item in items) {
-                  lt.add(Container(
-                    margin: const EdgeInsets.all(5),
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                        border: Border.all(width: 2, color: Colors.brown),
-                        color: Colors.amber[100],
-                        borderRadius: BorderRadius.circular(10)),
-                    child: Column(children: [
-                      Text(item['itemName']),
-                      Text(toCurrency(item['itemPrice']))
-                    ]),
-                  ));
+                  lt.add(
+                    GestureDetector(
+                      onTap: () {
+                        int count = 1;
+                        int price = item['itemPrice'];
+                        var optionData = {};
+                        var orderData = {};
+
+                        //options를 가공
+                        List<dynamic> options = item['options'];
+                        List<Widget> datas = [];
+                        for (var option in options) {
+                          var values =
+                              option['optionValue'].toString().split('\n');
+                          optionData[option['optionName']] = values[0];
+                          //orderData['과일종류'] = '딸기';
+                          datas.add(
+                            Column(
+                              children: [
+                                Text(option['optionName']),
+                                CustomRadioButton(
+                                    defaultSelected: values[0],
+                                    enableButtonWrap: true,
+                                    buttonLables: values,
+                                    buttonValues: values,
+                                    radioButtonValue: (value) {
+                                      optionData[option['optionName']] = value;
+                                      print(optionData);
+                                    },
+                                    unSelectedColor: Colors.white,
+                                    selectedColor: Colors.brown)
+                              ],
+                            ),
+                          );
+                        }
+                        showDialog(
+                          context: context,
+                          builder: (context) =>
+                              StatefulBuilder(builder: (context, st) {
+                            return AlertDialog(
+                              title: ListTile(
+                                title: Text('${item['itemName']}'),
+                                subtitle: Text(toCurrency(price)),
+                                trailing: CartStepper(
+                                  value: count,
+                                  stepper: 1,
+                                  didChangeCount: (value) {
+                                    if (value > 0) {
+                                      st(() {
+                                        count = value;
+                                        price = item['itemPrice'] * count;
+                                      });
+                                    }
+                                  },
+                                ),
+                              ),
+                              content: Column(
+                                children: datas,
+                              ),
+                              actions: [
+                                const Text('취소'),
+                                TextButton(
+                                    onPressed: () {
+                                      orderData['orderItem'] = item['itemName'];
+                                      orderData['orderQty'] = count;
+                                      orderData['orderOptions'] = optionData;
+                                      print(orderData);
+                                    },
+                                    child: const Text('담기'))
+                              ],
+                            );
+                          }),
+                        );
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.all(5),
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                            border: Border.all(width: 2, color: Colors.brown),
+                            color: Colors.amber[100],
+                            borderRadius: BorderRadius.circular(10)),
+                        child: Column(children: [
+                          Text(item['itemName']),
+                          Text(toCurrency(item['itemPrice']))
+                        ]),
+                      ),
+                    ),
+                  );
                 }
                 return Wrap(
                   children: lt,
@@ -154,11 +233,10 @@ class _MainState extends State<Main> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          backgroundColor: ThemeData.light(useMaterial3: false).primaryColor,
           title: const Text("Kkwabaegi Caffee"),
           actions: [
             Transform.translate(
-              offset: const Offset(-10, 5),
+              offset: const Offset(-10, 10),
               child: Badge(
                 label: const Text('1'),
                 child: IconButton(
