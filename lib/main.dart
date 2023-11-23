@@ -51,7 +51,6 @@ class _MainState extends State<Main> {
   dynamic itemList = const Text('item');
   //장바구니 컨트롤러
   PanelController panelController = PanelController();
-  int itemCount = 1;
   //장바구니 주문 목록
   var orderList = [];
   dynamic orderListView = const Center(child: Text('텅텅 비였어요'));
@@ -67,6 +66,7 @@ class _MainState extends State<Main> {
           itemBuilder: (context, index) {
             var order = orderList[index];
             var option = '';
+
             for (var i in order['orderOptions'].keys) {
               option = '$option$i : ${order['orderOptions'][i]} / ';
             }
@@ -123,7 +123,7 @@ class _MainState extends State<Main> {
             );
           }
         } else {
-          return const Text('Loding...');
+          return const CircularProgressIndicator();
         }
       },
     );
@@ -278,7 +278,7 @@ class _MainState extends State<Main> {
             Transform.translate(
               offset: const Offset(-10, 10),
               child: Badge(
-                label: Text(itemCount.toString()),
+                label: Text('${orderList.length}'),
                 child: IconButton(
                     onPressed: () {
                       if (panelController.isPanelClosed) {
@@ -309,16 +309,25 @@ class _MainState extends State<Main> {
 
             //장바구니 슬라이딩
             panel: Container(
-              color: Colors.yellow,
+              decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius:
+                      BorderRadius.vertical(top: Radius.circular(10))),
               child: Column(
                 children: [
                   Container(
                     width: double.infinity,
                     height: 50,
-                    color: Colors.green,
-                    child: const Text(
-                      '장바구니',
-                      style: TextStyle(fontSize: 30),
+                    decoration: const BoxDecoration(
+                      color: Colors.brown,
+                      borderRadius:
+                          BorderRadius.vertical(top: Radius.circular(10)),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        '장바구니',
+                        style: TextStyle(fontSize: 30, color: Colors.white),
+                      ),
                     ),
                   ),
                   Expanded(child: orderListView)
