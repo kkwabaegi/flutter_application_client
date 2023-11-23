@@ -51,9 +51,27 @@ class _MainState extends State<Main> {
   dynamic itemList = const Text('item');
   //장바구니 컨트롤러
   PanelController panelController = PanelController();
+  int itemCount = 1;
+  //장바구니 주문 목록
+  var orderList = [];
+  dynamic orderListView = const Center(child: Text('텅텅 비였어요'));
 
   String toCurrency(int n) {
     return NumberFormat.currency(locale: 'ko_KR', symbol: '₩').format(n);
+  }
+
+  //장바구니 목록 보기
+  void showOrderList() {
+    setState(() {
+      orderListView = ListView.separated(
+          itemBuilder: (context, index) {
+            return const ListTile(
+              title: Text(''),
+            );
+          },
+          separatorBuilder: (context, index) => const Divider(),
+          itemCount: orderList.length);
+    });
   }
 
   //카테고리 보기 기능
@@ -176,13 +194,19 @@ class _MainState extends State<Main> {
                                 children: datas,
                               ),
                               actions: [
-                                const Text('취소'),
+                                TextButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: const Text('취소')),
                                 TextButton(
                                     onPressed: () {
                                       orderData['orderItem'] = item['itemName'];
                                       orderData['orderQty'] = count;
                                       orderData['orderOptions'] = optionData;
-                                      print(orderData);
+                                      print(orderList);
+                                      orderList.add(orderData);
+                                      Navigator.pop(context);
                                     },
                                     child: const Text('담기'))
                               ],
@@ -219,7 +243,6 @@ class _MainState extends State<Main> {
           });
     });
   }
-  //장바구니 보기 기능
 
   @override
   void initState() {
@@ -238,7 +261,7 @@ class _MainState extends State<Main> {
             Transform.translate(
               offset: const Offset(-10, 10),
               child: Badge(
-                label: const Text('1'),
+                label: Text(itemCount.toString()),
                 child: IconButton(
                     onPressed: () {
                       if (panelController.isPanelClosed) {
@@ -268,8 +291,19 @@ class _MainState extends State<Main> {
             maxHeight: 300,
 
             //장바구니 슬라이딩
-            panel: const Center(
-              child: Text("This is the sliding Widget"),
+            panel: Container(
+              color: Colors.amber,
+              child: Column(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    height: 50,
+                    color: Colors.red,
+                    child: const Text('장바구니'),
+                  ),
+                  Expanded(child: orderListView)
+                ],
+              ),
             ),
             body: Column(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
