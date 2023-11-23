@@ -66,6 +66,10 @@ class _MainState extends State<Main> {
       orderListView = ListView.separated(
           itemBuilder: (context, index) {
             var order = orderList[index];
+            var option = '';
+            for (var i in order['orderOptions'].keys) {
+              option = '$option$i : ${order['orderOptions'][i]} / ';
+            }
             return ListTile(
               leading: IconButton(
                 onPressed: () {
@@ -75,12 +79,9 @@ class _MainState extends State<Main> {
                 icon: const Icon(Icons.close),
               ),
               title: Text('${order['orderItem']} X ${order['orderQty']}'),
-              subtitle: Text(order['orderOptions']
-                  .toString()
-                  .replaceAll('{', '')
-                  .replaceAll('}', '')
-                  .replaceAll(',', ' /')),
-              trailing: Text(toCurrency(order['orderPrice'])),
+              subtitle: Text(option.substring(0, option.length - 2)),
+              trailing:
+                  Text(toCurrency(order['orderPrice'] * order['orderQty'])),
             );
           },
           separatorBuilder: (context, index) => const Divider(),
@@ -218,7 +219,8 @@ class _MainState extends State<Main> {
                                       orderData['orderItem'] = item['itemName'];
                                       orderData['orderQty'] = count;
                                       orderData['orderOptions'] = optionData;
-                                      orderData['orderPrice'] = price;
+                                      orderData['orderPrice'] =
+                                          item['itemPrice'];
                                       orderList.add(orderData);
                                       showOrderList();
                                       Navigator.pop(context);
