@@ -65,11 +65,8 @@ class _MainState extends State<Main> {
       orderListView = ListView.separated(
           itemBuilder: (context, index) {
             var order = orderList[index];
-            var option = '';
+            var option = order['orderOptions'].toString();
 
-            for (var i in order['orderOptions'].keys) {
-              option = '$option$i : ${order['orderOptions'][i]} / ';
-            }
             return ListTile(
               leading: IconButton(
                 onPressed: () {
@@ -79,7 +76,8 @@ class _MainState extends State<Main> {
                 icon: const Icon(Icons.close),
               ),
               title: Text('${order['orderItem']} X ${order['orderQty']}'),
-              subtitle: Text(option.substring(0, option.length - 2)),
+              subtitle: Text(
+                  option.substring(1, option.length - 1).replaceAll(',', ' /')),
               trailing:
                   Text(toCurrency(order['orderPrice'] * order['orderQty'])),
             );
