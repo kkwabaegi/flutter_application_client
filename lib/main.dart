@@ -65,8 +65,22 @@ class _MainState extends State<Main> {
     setState(() {
       orderListView = ListView.separated(
           itemBuilder: (context, index) {
-            return const ListTile(
-              title: Text(''),
+            var order = orderList[index];
+            return ListTile(
+              leading: IconButton(
+                onPressed: () {
+                  orderList.removeAt(index);
+                  showOrderList();
+                },
+                icon: const Icon(Icons.close),
+              ),
+              title: Text('${order['orderItem']} X ${order['orderQty']}'),
+              subtitle: Text(order['orderOptions']
+                  .toString()
+                  .replaceAll('{', '')
+                  .replaceAll('}', '')
+                  .replaceAll(',', ' /')),
+              trailing: Text(toCurrency(order['orderPrice'])),
             );
           },
           separatorBuilder: (context, index) => const Divider(),
@@ -204,8 +218,9 @@ class _MainState extends State<Main> {
                                       orderData['orderItem'] = item['itemName'];
                                       orderData['orderQty'] = count;
                                       orderData['orderOptions'] = optionData;
-                                      print(orderList);
+                                      orderData['orderPrice'] = price;
                                       orderList.add(orderData);
+                                      showOrderList();
                                       Navigator.pop(context);
                                     },
                                     child: const Text('담기'))
@@ -288,18 +303,21 @@ class _MainState extends State<Main> {
         body: SlidingUpPanel(
             controller: panelController,
             minHeight: 50,
-            maxHeight: 300,
+            maxHeight: 500,
 
             //장바구니 슬라이딩
             panel: Container(
-              color: Colors.amber,
+              color: Colors.yellow,
               child: Column(
                 children: [
                   Container(
                     width: double.infinity,
                     height: 50,
-                    color: Colors.red,
-                    child: const Text('장바구니'),
+                    color: Colors.green,
+                    child: const Text(
+                      '장바구니',
+                      style: TextStyle(fontSize: 30),
+                    ),
                   ),
                   Expanded(child: orderListView)
                 ],
