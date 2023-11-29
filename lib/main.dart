@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:custom_radio_grouped_button/custom_radio_grouped_button.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_application_client/my_cafe.dart';
 import 'firebase_options.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:intl/intl.dart';
+
+import 'order_result.dart';
 
 var db = FirebaseFirestore.instance;
 String categoryCollectionName = 'cafe-category';
@@ -53,7 +54,7 @@ class _MainState extends State<Main> {
   PanelController panelController = PanelController();
   //장바구니 주문 목록
   var orderList = [];
-  dynamic orderListView = const Center(child: Text('텅텅 비였어요'));
+  dynamic orderListView = const Center(child: Text('장바구니가 비었습니다.'));
 
   String toCurrency(int n) {
     return NumberFormat.currency(locale: 'ko_KR', symbol: '₩').format(n);
@@ -270,76 +271,123 @@ class _MainState extends State<Main> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: const Text("Kkwabaegi Caffee"),
-          actions: [
-            Transform.translate(
-              offset: const Offset(-10, 10),
-              child: Badge(
-                label: Text('${orderList.length}'),
-                child: IconButton(
-                    onPressed: () {
-                      if (panelController.isPanelClosed) {
-                        panelController.open();
-                      } else {
-                        panelController.close();
-                      }
-                    },
-                    icon: const Icon(Icons.shopping_cart)),
+      appBar: AppBar(
+        title: const Text("Kkwabaegi Caffee"),
+        actions: [
+          Transform.translate(
+            offset: const Offset(-10, 10),
+            child: Badge(
+              label: Text('${orderList.length}'),
+              child: IconButton(
+                  onPressed: () {
+                    if (panelController.isPanelClosed) {
+                      panelController.open();
+                    } else {
+                      panelController.close();
+                    }
+                  },
+                  icon: const Icon(Icons.shopping_cart)),
+            ),
+          )
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          if (panelController.isPanelClosed) {
+            panelController.open();
+          } else {
+            panelController.close();
+          }
+        },
+        child: const Icon(Icons.upload),
+      ),
+      body: SlidingUpPanel(
+        controller: panelController,
+        minHeight: 50,
+        maxHeight: 500,
+        // 장바구니 슬라이딩
+        panel: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+          ),
+          child: Column(
+            children: [
+              Container(
+                height: 50,
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+                  color: Colors.brown,
+                ),
+                child: const Center(
+                    child: Text(
+                  '장바구니',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 30),
+                )),
               ),
-            )
+              Expanded(
+                child: orderListView,
+              ),
+              ElevatedButton(
+                  onPressed: orderList.isEmpty
+                      ? null
+                      : () async {
+                          TextEditingController controller =
+                              TextEditingController();
+                          var result = await showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                    title: const Text('결재하기'),
+                                    content: TextFormField(
+                                      controller: controller,
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                          onPressed: () {
+                                            Navigator.pop(context, null);
+                                          },
+                                          child: const Text('취소')),
+                                      TextButton(
+                                          onPressed: () {
+                                            var orderResult = {
+                                              'order': orderList,
+                                              'orderName': controller.text,
+                                            };
+                                            Navigator.pop(context, orderResult);
+                                          },
+                                          child: const Text('결제'))
+                                    ],
+                                  ));
+                          if (result != null) {
+                            // 결제가 완료되어 다음 페이지에서 주문 번호를 받는다.
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    OrderResult(orderResult: result),
+                              ),
+                            );
+                          }
+                        },
+                  child: const Text('결재하기'))
+            ],
+          ),
+        ),
+        body: Column(
+          children: [
+            const SizedBox(
+              height: 20,
+            ),
+            // 카테고리 목록
+            categoryList,
+            // 아이템
+            Expanded(child: itemList),
           ],
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            if (panelController.isPanelClosed) {
-              panelController.open();
-            } else {
-              panelController.close();
-            }
-          },
-          child: const Icon(Icons.upload),
-        ),
-        body: SlidingUpPanel(
-            controller: panelController,
-            minHeight: 50,
-            maxHeight: 500,
-
-            //장바구니 슬라이딩
-            panel: Container(
-              decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius:
-                      BorderRadius.vertical(top: Radius.circular(10))),
-              child: Column(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    height: 50,
-                    decoration: const BoxDecoration(
-                      color: Colors.brown,
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(10)),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        '장바구니',
-                        style: TextStyle(fontSize: 30, color: Colors.white),
-                      ),
-                    ),
-                  ),
-                  Expanded(child: orderListView)
-                ],
-              ),
-            ),
-            body: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                //카테고리 목록
-                categoryList,
-                //아이템 목록
-                Expanded(child: itemList),
-              ],
-            )));
+      ),
+    );
   }
 }
