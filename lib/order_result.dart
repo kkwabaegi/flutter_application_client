@@ -1,3 +1,4 @@
+import 'package:circular_countdown_timer/circular_countdown_timer.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -15,6 +16,8 @@ class OrderResult extends StatefulWidget {
 
 class _OrderResultState extends State<OrderResult> {
   late Map<String, dynamic> orderResult;
+  dynamic resultView = const Text('주문중입니다...');
+  int duration = 5;
 
   Future<int> getOrderNumber() async {
     //가장 마지막 번호
@@ -48,15 +51,42 @@ class _OrderResultState extends State<OrderResult> {
     int number = await getOrderNumber();
     orderResult['orderNumber'] = number;
     orderResult['orderTime'] = Timestamp.fromDate(DateTime.now());
+    orderResult['orderComplete'] = false;
     await firestore
         .collection(orderCollectionName)
         .add(orderResult)
         .then((value) {
       print('ok');
-      return null;
+      //화면 꾸미기
+      showResult(number);
     }).onError((error, stackTrace) {
       print('error');
-      return null;
+    });
+  }
+
+  void showResult(int number) {
+    setState(() {
+      resultView = SizedBox(
+        width: double.infinity,
+        child: Column(
+          children: [
+            const Text('주문이 완료되었습니다'),
+            Text('주문번호 : $number'),
+            Text('$duration초 후에 창이 닫힙니다'),
+            CircularCountDownTimer(
+              width: 300,
+              height: 300,
+              duration: duration,
+              isReverse: true,
+              fillColor: Colors.black,
+              ringColor: Colors.grey,
+              onComplete: () {
+                Navigator.pop(context);
+              },
+            )
+          ],
+        ),
+      );
     });
   }
 
@@ -77,7 +107,10 @@ class _OrderResultState extends State<OrderResult> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Text(orderResult.toString()),
+      appBar: AppBar(
+        title: const Text('Kkwabaegi Caffee'),
+      ),
+      body: resultView,
     );
   }
 }

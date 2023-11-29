@@ -260,6 +260,12 @@ class _MainState extends State<Main> {
     });
   }
 
+  void clearOrder() {
+    setState(() {
+      orderList.clear();
+    });
+  }
+
   @override
   void initState() {
     // TODO: implement initState
@@ -363,13 +369,16 @@ class _MainState extends State<Main> {
                                   ));
                           if (result != null) {
                             // 결제가 완료되어 다음 페이지에서 주문 번호를 받는다.
-                            Navigator.push(
+                            await Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
                                     OrderResult(orderResult: result),
                               ),
                             );
+                            clearOrder();
+                            showOrderList();
+                            panelController.close();
                           }
                         },
                   child: const Text('결재하기'))
