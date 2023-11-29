@@ -359,7 +359,7 @@ class _MainState extends State<Main> {
                                       TextButton(
                                           onPressed: () {
                                             var orderResult = {
-                                              'order': orderList,
+                                              'orders': orderList,
                                               'orderName': controller.text,
                                             };
                                             Navigator.pop(context, orderResult);
