@@ -325,7 +325,7 @@ class _MainState extends State<Main> {
                   style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
-                      fontSize: 30),
+                      fontSize: 25),
                 )),
               ),
               Expanded(

@@ -25,6 +25,7 @@ class _OrderResultState extends State<OrderResult> {
 
     var today = Timestamp.fromDate(s);
     try {
+      //개인적으로 이
       await firestore
           .collection(orderCollectionName)
           .where('orderTime', isGreaterThan: today)
@@ -39,7 +40,24 @@ class _OrderResultState extends State<OrderResult> {
     } catch (e) {
       number = 1;
     }
+    print(number);
     return number;
+  }
+
+  Future<void> setOrder() async {
+    int number = await getOrderNumber();
+    orderResult['orderNumber'] = number;
+    orderResult['orderTime'] = Timestamp.fromDate(DateTime.now());
+    await firestore
+        .collection(orderCollectionName)
+        .add(orderResult)
+        .then((value) {
+      print('ok');
+      return null;
+    }).onError((error, stackTrace) {
+      print('error');
+      return null;
+    });
   }
 
   @override
@@ -50,7 +68,7 @@ class _OrderResultState extends State<OrderResult> {
     orderResult = widget.orderResult;
 
     // 현재 주문번호를 설정
-    getOrderNumber();
+    setOrder();
     // 오늘을 기준으로 여태까지 개수 10건 -> 11번, 만약 한 건도 없으면 1번
 
     //주문번호, 시간포함, 데이터 저장
